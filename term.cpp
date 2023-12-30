@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <iostream>
 #include <cstdlib>
 #include <ctype.h>
@@ -7,6 +8,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <string>
+#include <array>
 
 #ifndef DEBUG_MODE
 #define DEBUG_MODE
@@ -56,22 +58,6 @@ void getWindowSize(int& rows, int& cols)
         cols = ws.ws_row;
     }
 }
-
-void getCursorPos(char * pointer){
-    char * a = pointer;
-    COUT("\x1b[6n");
-    char cursor_info[10];
-    unsigned int i = 0;
-    while(i < sizeof(cursor_info)){
-        std::cin.get(*a);
-        a ++;
-        // std::cout << cursor_info[i];
-        if(cursor_info[i] == 'R') break;
-        i ++;
-    }
-    *a = '\0';
-}
-
 // 控制光标移动，direction代表方向
 void moveCursor(char direction){
     switch(direction){
@@ -95,9 +81,10 @@ void getUserInput(char& c){
 }
 
 // 控制清除屏幕的函数
-void clearWindow(int mode){
+void cleanWindow(int mode){
     switch(mode){
         case 1:
+            COUT("\x1b[2J"); // 清除整个屏幕
             break;
         case 2:
             break;
@@ -110,23 +97,44 @@ void clearWindow(int mode){
     }
 }
 
+// 返回鼠标的位置[rows, cols]
+void getCursorPos(int& rows, int& cols){
+    COUT("\x1b[6n"); // 向终端输入控制序列，返回光标信息
+    char cursor_info[10]; // 前两个字符是 ESC [ 最后以 R结尾
+    unsigned int i = 0;
+    while(i < sizeof(cursor_info)){
+        std::cin.get(cursor_info[i]);
+        if(cursor_info[i] == 'R') break; // 到R直接退出
+        i ++;
+    }
+    cursor_info[i] = '\0';
+    char* cursor_begin = cursor_info + 2;
+    std::string str = cursor_begin;
+    
+    int part_pos = str.find(';');
+    std::size_t size;
+    rows = std::stoi(str.substr(0, part_pos+1));
+    cols = std::stoi(str.substr(part_pos+1, str.size()));
+}
+
 int main(){
     enableRawMode();
-    COUT("Test ECHO");
     while(true){
         char c;
         getUserInput(c);
+        switch(c){
+
+        }
         if(c == 'q'){
             exit(1);
         }else if(c == 'c'){
-            char a[20];
-            getCursorPos(a);
-            std::string s = a;
-            std::cout << s << std::endl;
+            int a,b;
+            getCursorPos(a,b);
+            std::cout << "CURSORPOS" << a << " " << b;
         }else if(c == 'z'){
             int winrows, wincols;
             getWindowSize(winrows, wincols);
-            std::cout << "WINDOWS: " << winrows << " " << wincols << std::endl;
+            std::cout << "WINDOWS: " << winrows << " " << wincols;
         }else if(c == 'w'){
             moveCursor('w');
         }else if(c == 'a'){
