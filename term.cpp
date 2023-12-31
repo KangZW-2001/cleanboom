@@ -28,6 +28,10 @@
 // 终端最原始的设置，保存起来，后面用于恢复终端
 struct termios orig_termios_config; // 
 
+struct TermInfo{
+    int winRows,winCols,cursorRows,cursorCols,boardRows,boardCols;
+} terminfo;
+
 void die(const char* error_info){
     std::cout << error_info << std::endl;
     exit(1);
@@ -84,7 +88,7 @@ void getUserInput(char& c){
 void cleanWindow(int mode){
     switch(mode){
         case 1:
-            COUT("\x1b[2J"); // 清除整个屏幕
+            COUT("\x1b[2i"); // 清除整个屏幕
             break;
         case 2:
             break;
@@ -117,7 +121,26 @@ void getCursorPos(int& rows, int& cols){
     cols = std::stoi(str.substr(part_pos+1, str.size()));
 }
 
+void testDrawBoard(){
+    int xbegin = (terminfo.winCols - terminfo.boardCols) / 2;
+    int ybegin = (terminfo.winRows - terminfo.cursorRows) / 2;
+    for (int i = 0; i < terminfo.boardCols; i++){
+        std::cout << "|";
+        for(int j = 0; j < terminfo.boardRows; j++){
+            std::cout << "-";
+        }
+        std::cout << "|\r\n";
+    }
+}
+
 int main(){
+    // TermInfo terminfo;
+
+    std::cout << "请输入你想要创建的行数：";
+    std::cin >> terminfo.boardRows; 
+    std::cout << "请输入你想要创建的列数：";
+    std::cin >> terminfo.boardCols;
+
     enableRawMode();
     while(true){
         char c;
@@ -128,13 +151,10 @@ int main(){
         if(c == 'q'){
             exit(1);
         }else if(c == 'c'){
-            int a,b;
-            getCursorPos(a,b);
-            std::cout << "CURSORPOS" << a << " " << b;
+            getCursorPos(terminfo.cursorRows,terminfo.cursorCols);
         }else if(c == 'z'){
-            int winrows, wincols;
-            getWindowSize(winrows, wincols);
-            std::cout << "WINDOWS: " << winrows << " " << wincols;
+            getWindowSize(terminfo.winRows, terminfo.winCols); // 获取到窗口的行数和列数
+            std::cout << "WINDOW SIZE : " << terminfo.winRows << " ," <<terminfo.winCols<<std::endl; 
         }else if(c == 'w'){
             moveCursor('w');
         }else if(c == 'a'){
@@ -143,6 +163,8 @@ int main(){
             moveCursor('s');
         }else if(c == 'd'){
             moveCursor('d');
+        }else if(c == 'n'){
+            testDrawBoard();
         }
     }
     return 0;
