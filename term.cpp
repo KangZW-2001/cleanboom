@@ -9,6 +9,7 @@
 #include <sys/ioctl.h>
 #include <string>
 #include <array>
+#include "term.h"
 
 #ifndef DEBUG_MODE
 #define DEBUG_MODE
@@ -22,15 +23,11 @@
  * */
 #define COUT(x) std::cout << x;
 
-// 定义一些输出到终端中的特殊序列（VT100 escape序列）
-#define CURSOR_POS "\x1b[6n"
 
 // 终端最原始的设置，保存起来，后面用于恢复终端
 struct termios orig_termios_config; // 
 
-struct TermInfo{
-    int winRows,winCols,cursorRows,cursorCols,boardRows,boardCols;
-} terminfo;
+TermInfo terminfo;
 
 void die(const char* error_info){
     std::cout << error_info << std::endl;
@@ -63,32 +60,32 @@ void getWindowSize(int& rows, int& cols)
     }
 }
 // 控制光标移动，direction代表方向
-void moveCursor(char direction){
+void moveCursor(char direction, int distance){
+    // A：上， B：下，C：forward右，D：backward左
+    char dir;
     switch(direction){
-        case 1:
-            COUT("\x1b[1A");
+        case 'w':
+            dir = 'A';
             break;
-        case 2:
-            COUT("\x1b[1D");
+        case 'a':
+            dir = 'D';
             break;
-        case 3:
-            COUT("\x1b[1B");
+        case 's':
+            dir = 'B';
             break;
-        case 4:
-            COUT("\x1b[1C");
+        case 'd':
+            dir = 'C';
             break;
     }
-}
-
-void getUserInput(char& c){
-    std::cin.get(c);
+    std::string order = std::string("\x1b[") + std::to_string(distance) + dir;
+    COUT(order);
 }
 
 // 控制清除屏幕的函数
 void cleanWindow(int mode){
     switch(mode){
         case 1:
-            COUT("\x1b[2i"); // 清除整个屏幕
+            COUT("\x1b[2J"); // 清除整个屏幕
             break;
         case 2:
             break;
@@ -121,51 +118,56 @@ void getCursorPos(int& rows, int& cols){
     cols = std::stoi(str.substr(part_pos+1, str.size()));
 }
 
-void testDrawBoard(){
+void drawBoard(){
     int xbegin = (terminfo.winCols - terminfo.boardCols) / 2;
     int ybegin = (terminfo.winRows - terminfo.cursorRows) / 2;
     for (int i = 0; i < terminfo.boardCols; i++){
+        moveCursor('d', xbegin);
         std::cout << "|";
         for(int j = 0; j < terminfo.boardRows; j++){
-            std::cout << "-";
+            std::cout << "--";
         }
         std::cout << "|\r\n";
     }
 }
 
-int main(){
-    // TermInfo terminfo;
-
-    std::cout << "请输入你想要创建的行数：";
-    std::cin >> terminfo.boardRows; 
-    std::cout << "请输入你想要创建的列数：";
-    std::cin >> terminfo.boardCols;
-
-    enableRawMode();
+void handlePlayerInput(){
+    char c;
     while(true){
-        char c;
-        getUserInput(c);
+        std::cin.get(c);
         switch(c){
-
-        }
-        if(c == 'q'){
-            exit(1);
-        }else if(c == 'c'){
-            getCursorPos(terminfo.cursorRows,terminfo.cursorCols);
-        }else if(c == 'z'){
-            getWindowSize(terminfo.winRows, terminfo.winCols); // 获取到窗口的行数和列数
-            std::cout << "WINDOW SIZE : " << terminfo.winRows << " ," <<terminfo.winCols<<std::endl; 
-        }else if(c == 'w'){
-            moveCursor('w');
-        }else if(c == 'a'){
-            moveCursor('a');
-        }else if(c == 's'){
-            moveCursor('s');
-        }else if(c == 'd'){
-            moveCursor('d');
-        }else if(c == 'n'){
-            testDrawBoard();
+            case 'q':
+                exit(1);
+                break;
+            case 'w':
+                moveCursor('w', 1);
+                break;
+            case 'a':
+                moveCursor('a', 1);
+                break;
+            case 's':
+                moveCursor('s', 1);
+                break;
+            case 'd':
+                moveCursor('d', 1);
+                break;
+            case 'c':
+                getCursorPos(terminfo.cursorRows,terminfo.cursorCols);
+#ifdef DEBUG_MODE
+    std::cout << "CURSOR SIZE: " << terminfo.cursorRows << " ," <<terminfo.cursorCols<< "\r\n"; 
+#endif // DEBUG
+               break;
+            case 'z':
+               getWindowSize(terminfo.winCols, terminfo.winRows);
+#ifdef DEBUG_MODE
+    std::cout << "WINDOW SIZE : " << terminfo.winRows << " ," <<terminfo.winCols<< "\r\n"; 
+#endif // DEBUG
+               break;
+            case 'n':
+               drawBoard();
         }
     }
-    return 0;
 }
+
+
+

@@ -1,24 +1,17 @@
-#include <cstdlib>
 #include <iostream>
-#define DEBUG_MODE
+#include "term.h"
 
-void enableRawMode();
-void getWindowSize(int&, int&);
-void getCursorPos(int&, int&);
-char getUserInput();
-#ifndef COUT
-#define COUT(x) std::cout << x << std::endl;
-#endif // !COUT
+extern TermInfo terminfo;
 
 int main(){
-    while(true){
-        char c = getUserInput();
-        if(c == 'q') exit(1);
-        else{
-            enableRawMode();
-            int rows, cols;
-            getCursorPos(rows, cols);
-            return 0;
-        }
-    }
+    // TermInfo terminfo;
+    std::cout << "请输入你想要创建的行数：";
+    std::cin >> terminfo.boardRows; 
+    std::cout << "请输入你想要创建的列数：";
+    std::cin >> terminfo.boardCols;
+
+    enableRawMode();
+    cleanWindow(1);
+    handlePlayerInput();
+    return 0;
 }
