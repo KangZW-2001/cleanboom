@@ -21,7 +21,6 @@
  *
  *
  * */
-#define COUT(x) std::cout << x;
 
 
 // 终端最原始的设置，保存起来，后面用于恢复终端
@@ -59,6 +58,7 @@ void getWindowSize(int& rows, int& cols)
         cols = ws.ws_row;
     }
 }
+
 // 控制光标移动，direction代表方向
 void moveCursor(char direction, int distance){
     // A：上， B：下，C：forward右，D：backward左
@@ -80,6 +80,7 @@ void moveCursor(char direction, int distance){
     std::string order = std::string("\x1b[") + std::to_string(distance) + dir;
     COUT(order);
 }
+// '\x1b[行数;列数f' 可以将光标移动到指定为止，实现该函数
 
 // 控制清除屏幕的函数
 void cleanWindow(int mode){
@@ -118,18 +119,17 @@ void getCursorPos(int& rows, int& cols){
     cols = std::stoi(str.substr(part_pos+1, str.size()));
 }
 
-void drawBoard(){
-    int xbegin = (terminfo.winCols - terminfo.boardCols) / 2;
-    int ybegin = (terminfo.winRows - terminfo.cursorRows) / 2;
-    for (int i = 0; i < terminfo.boardCols; i++){
-        moveCursor('d', xbegin);
-        std::cout << "|";
-        for(int j = 0; j < terminfo.boardRows; j++){
-            std::cout << "--";
-        }
-        std::cout << "|\r\n";
-    }
-}
+// void drawBoard(){
+//     int xbegin = (terminfo.winCols - terminfo.boardCols) / 2;
+//     int ybegin = (terminfo.winRows - terminfo.cursorRows) / 2;
+//     for (int i = 0; i < terminfo.boardCols; i++){
+//         moveCursor('d', xbegin);
+//         std::cout << "|";
+//         for(int j = 0; j < terminfo.boardRows; j++){
+//             std::cout << "--";
+//         }
+//         std::cout << "|\r\n";
+//     }
 
 void handlePlayerInput(){
     char c;
@@ -163,8 +163,6 @@ void handlePlayerInput(){
     std::cout << "WINDOW SIZE : " << terminfo.winRows << " ," <<terminfo.winCols<< "\r\n"; 
 #endif // DEBUG
                break;
-            case 'n':
-               drawBoard();
         }
     }
 }

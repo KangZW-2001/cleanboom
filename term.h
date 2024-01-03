@@ -2,8 +2,13 @@
 #ifndef TERM_H
 #define TERM_H
 
+
+#define COUT(x) std::cout << x;
+
+#define WINDOW_CLEAN_ALL 1;
+
 struct TermInfo{
-    int winRows,winCols,cursorRows,cursorCols,boardRows,boardCols;
+    int winRows,winCols,cursorRows,cursorCols; // 分别存储窗口大小和鼠标位置
 };
 
 void die(const char* error_info);
