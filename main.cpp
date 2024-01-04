@@ -15,6 +15,8 @@ int main(){
     cleanWindow(1);
     getWindowSize(terminfo.winCols, terminfo.winRows);
     enableRawMode();
+    initBoard();
+    drawBoard();
     handlePlayerInput();
     return 0;
 }

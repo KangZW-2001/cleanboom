@@ -27,4 +27,8 @@ void drawBoard();
 
 void handlePlayerInput();
 
+void moveCursorToLocation(const int rows, const int cols);
+
+void setTextColor(char color);
+
 #endif // !TERM_H 

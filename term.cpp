@@ -8,8 +8,8 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <string>
-#include <array>
 #include "term.h"
+#include "board.h"
 
 #ifndef DEBUG_MODE
 #define DEBUG_MODE
@@ -25,6 +25,8 @@
 
 // 终端最原始的设置，保存起来，后面用于恢复终端
 struct termios orig_termios_config; // 
+
+extern BoardBound boardbound;
 
 TermInfo terminfo;
 
@@ -81,6 +83,10 @@ void moveCursor(char direction, int distance){
     COUT(order);
 }
 // '\x1b[行数;列数f' 可以将光标移动到指定为止，实现该函数
+void moveCursorToLocation(const int rows, const int cols){
+    std::string order = std::string("\x1b[") + std::to_string(rows) + ';' + std::to_string(cols) + 'f';
+    COUT(order);
+}
 
 // 控制清除屏幕的函数
 void cleanWindow(int mode){
@@ -119,17 +125,10 @@ void getCursorPos(int& rows, int& cols){
     cols = std::stoi(str.substr(part_pos+1, str.size()));
 }
 
-// void drawBoard(){
-//     int xbegin = (terminfo.winCols - terminfo.boardCols) / 2;
-//     int ybegin = (terminfo.winRows - terminfo.cursorRows) / 2;
-//     for (int i = 0; i < terminfo.boardCols; i++){
-//         moveCursor('d', xbegin);
-//         std::cout << "|";
-//         for(int j = 0; j < terminfo.boardRows; j++){
-//             std::cout << "--";
-//         }
-//         std::cout << "|\r\n";
-//     }
+
+void setTextColor(char color){
+
+}
 
 void handlePlayerInput(){
     char c;
@@ -139,24 +138,34 @@ void handlePlayerInput(){
             case 'q':
                 exit(1);
                 break;
+
             case 'w':
-                moveCursor('w', 1);
+                getCursorPos(terminfo.cursorRows, terminfo.cursorCols);
+                if(terminfo.cursorRows > boardbound.top)
+                    moveCursor('w', 1);
                 break;
+
             case 'a':
-                moveCursor('a', 1);
+                moveCursor('a', 2);
                 break;
+
             case 's':
-                moveCursor('s', 1);
+                getCursorPos(terminfo.cursorRows, terminfo.cursorCols);
+                if(terminfo.cursorRows < boardbound.bottom)
+                    moveCursor('s', 1);
                 break;
+
             case 'd':
-                moveCursor('d', 1);
+                moveCursor('d', 2);
                 break;
+
             case 'c':
                 getCursorPos(terminfo.cursorRows,terminfo.cursorCols);
 #ifdef DEBUG_MODE
     std::cout << "CURSOR SIZE: " << terminfo.cursorRows << " ," <<terminfo.cursorCols<< "\r\n"; 
 #endif // DEBUG
                break;
+               
             case 'z':
                getWindowSize(terminfo.winCols, terminfo.winRows);
 #ifdef DEBUG_MODE
